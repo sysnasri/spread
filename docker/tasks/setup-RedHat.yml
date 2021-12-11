@@ -1,0 +1,97 @@
+---
+- name: Setting proper nameservers
+  blockinfile:
+    block: |
+      nameserver "{{nameserver.ns1}}"
+      nameserver "{{nameserver.ns2}}"
+    insertafter: EOF
+    path: /etc/resolv.conf
+
+- name: Installing necessary packages.
+  package:
+    update_cache: true
+    name: "{{item}}"
+    state: present
+  loop: "{{docker_packages.redhat}}"
+  when: ansible_distribution == "CentOS"
+
+- name: Set http proxy for
+  template:
+    src: apt-proxy.j2
+    dest: /etc/apt/apt.conf.d/proxy.conf
+  when: proxy.server is defined and proxy.server != '' and proxy.server != None
+
+- name: Adding Docker Repository
+  yum_repository:
+    name: Docker
+    description: Docker CE Stable
+    baseurl: https://download.docker.com/linux/centos/$releasever/$basearch/stable
+    enabled: yes
+    gpgcheck: yes
+    gpgkey: https://download.docker.com/linux/centos/gpg
+    state: present
+
+- name: Updating yum and installing docker-ce
+  package:
+    update_cache: true
+    name: "{{item}}"
+    state: present
+  loop: "{{docker_version.debian | default (default_docker_version)}}"
+
+  ######## Set HTTP Proxy for Docker systemd service in vars.yaml ###########
+
+- name: Setting docker systemd proxy
+  file:
+    name: /etc/systemd/system/docker.service.d
+    state: directory
+- template:
+    src: docker-proxy.j2
+    dest: /etc/systemd/system/docker.service.d/http-proxy.conf
+  when: proxy.server is defined and proxy.server != '' and proxy.server != None
+  notify:
+    - docker_restart
+    - daemon_reload
+  tags: docker_proxy
+- name: Enabling docker service to run at boot time
+  service:
+    name: docker
+    enabled: true
+    state: started
+- meta: flush_handlers
+# - name: Checking if docker-compose is already installed
+#   stat:
+#     path: /usr/local/bin/docker-compose
+#   register: docpos
+
+- name: Installing Docker Compose
+  get_url:
+    url: "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-Linux-x86_64"
+    dest: /usr/local/bin/docker-compose
+    mode: "0755"
+
+  #when: docpos.stat.exists == false
+  tags: docker_compose
+
+- name: Installing Docker Module for Python
+  pip:
+    name: "{{item}}"
+    state: latest
+    extra_args: --upgrade
+  loop: "{{pip_modules}}"
+  notify:
+    - docker_restart
+- meta: flush_handlers
+
+  ################### Set your Docker hub credentials in default/main.yml #########################
+- name: login to dockerhub
+  docker_login:
+    username: "{{docker.username}}"
+    password: "{{docker.password}}"
+  when: docker.username is defined and docker.username != '' and docker.username != None
+  tags: docker_login
+
+- name: Pulling default Docker image
+  docker_image:
+    name: "{{ item }}"
+    source: pull
+  loop: "{{images_name}}"

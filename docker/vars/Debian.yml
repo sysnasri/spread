@@ -1,0 +1,14 @@
+---
+#packages which are neccessary for docker are listed here 
+docker_packages:
+   ubuntu: 
+     - apt-transport-https
+     - ca-certificates
+     - curl
+     - gnupg-agent
+     - software-properties-common
+     - python3-pip
+     - virtualenv
+     - python3-setuptools
+     - net-tools
+     - iproute2

@@ -1,0 +1,47 @@
+- name: Install docker on the target group
+  hosts: centos
+  vars_files:
+    - vars/main.yml
+  # roles:
+  #   - { role: sysnasri.docker }
+  tasks:
+    - include_role:
+        name: "./docker"
+  tags:
+    - docker
+    - install
+
+- name: A play book to deploy application as container in the target server
+  hosts: centos
+  tasks:
+    - name: check if docker service is up and running
+      service:
+        name: docker
+        state: started
+        enabled: yes
+      tags:
+        - deployment
+
+    - name: Insure git is installed
+      package:
+        name: git
+        state: present
+      tags:
+        - install
+
+    - name: pull source codes from git repository
+      git:
+        repo: "https://github.com/sysnasri/spread"
+        dest: /tmp/spread
+        update: yes
+      tags:
+        - deployment
+
+    - name: build docker containers from compose file.
+      docker_compose:
+        project_src: /tmp/spread
+        state: present
+        recreate: always
+        build: yes
+      tags:
+        - deployment

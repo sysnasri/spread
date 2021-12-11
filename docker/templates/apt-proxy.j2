@@ -1,0 +1,5 @@
+Acquire::http::Proxy "http://{{ proxy.server }}:{{ proxy.port }}/";
+Acquire::https::Proxy "http://{{ proxy.server }}:{{ proxy.port }}/";
+
+#Acquire::http::Proxy "http://{{ proxy.username }}:{{ proxy.password }}@{{ proxy.server }}:{{ proxy.port }}/";
+#Acquire::https::Proxy "http://{{ proxy.username }}:{{ proxy.password }}@{{ proxy.server }}:{{ proxy.port }}/";

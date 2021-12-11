@@ -1,0 +1,10 @@
+---
+- name: Install docker On target host
+  hosts: "{{ Target_Host }}"
+  vars_files:
+      - vars.yaml
+  environment:
+      http_proxy: "http://{{proxy.username}}:{{proxy.password}}@{{proxy.server}}:{{proxy.port}}"     
+      https_proxy: "http://{{proxy.username}}:{{proxy.password}}@{{proxy.server}}:{{proxy.port}}"
+  roles:
+    - { role: sysnasri.docker }

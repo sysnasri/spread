@@ -1,0 +1,21 @@
+version: "3.3"
+networks:
+  default_stack: null
+services:
+  app:
+    build:
+      context: './application'
+
+    container_name: application
+    networks:
+      default_stack: null
+  router:
+    build:
+      context: './router'
+    ports:
+      - "80:80"
+    container_name: nginx
+    links:
+      - "app"
+    networks:
+      default_stack: null

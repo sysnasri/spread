@@ -1,0 +1,6 @@
+[Service]
+Environment="HTTP_PROXY={{proxy.server}}:{{proxy.port}}"
+Environment="HTTPS_PROXY={{proxy.server}}:{{proxy.port}}"
+# For set a proxy with username and password comment out the fllowing and comment the above lines.
+#Environment="HTTP_PROXY=http://{{proxy.username}}:{{proxy.password}}@{{proxy.server}}:{{proxy.port}}"
+#Environment="HTTPS_PROXY=http://{{proxy.username}}:{{proxy.password}}@{{proxy.server}}:{{proxy.port}}"

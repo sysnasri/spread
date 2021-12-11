@@ -1,0 +1,32 @@
+---
+#Default container that can be pulled during docker setup
+images_name:
+  - nasri/snapp:v1
+#if you are located in restricated area you can use proxy
+# proxy:
+#     username: ""
+#     password: ""
+#     server: ""
+#     port: ""
+# Pipe modules can be named here to install for deployment purpose
+pip_modules:
+  - pip
+  - docker
+  - docker-compose
+# you have option to chose shecan name server for docker or just use http proxy which is more secure and faster.
+nameserver:
+  ns1: 8.8.8.8
+  ns2: 4.2.2.4
+# in some situation docker needs to be loged in. we could use ansible vault for credentials.
+# docker:
+#    username: ""
+#    password: ""
+default_docker_version:
+  - docker-ce
+  - docker-ce-cli
+  - containerd.io
+# docker_version:
+#   debian:
+#     docker: docker-ce=5:20.10.7~3-0~ubuntu-{{ansible_distribution_release}}
+#     cli: docker-ce-cli=5:20.10.7~3-0~ubuntu-{{ansible_distribution_release}}
+#   redhat: docker-ce-20.10.7
