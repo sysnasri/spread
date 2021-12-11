@@ -1,9 +1,7 @@
 - name: Install docker on the target group
-  hosts: centos
+  hosts: docker
   vars_files:
     - vars/main.yml
-  # roles:
-  #   - { role: sysnasri.docker }
   tasks:
     - include_role:
         name: "./docker"
@@ -12,7 +10,7 @@
     - install
 
 - name: A play book to deploy application as container in the target server
-  hosts: centos
+  hosts: docker
   tasks:
     - name: check if docker service is up and running
       service:
