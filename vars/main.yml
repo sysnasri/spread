@@ -1,2 +1,3 @@
 images_name:
   - nginx
+  - python:3.8-slim-buster

@@ -1,5 +1,5 @@
 ---
-- name: Setting proper nameservers
+- name: Set Proper Nameserver
   blockinfile:
     block: |
       nameserver "{{nameserver.ns1}}"
@@ -7,7 +7,7 @@
     insertafter: EOF
     path: /etc/resolv.conf
 
-- name: Installing necessary packages.
+- name: Install Necessary Packages
   package:
     update_cache: true
     name: "{{item}}"
@@ -15,24 +15,23 @@
   loop: "{{docker_packages.ubuntu}}"
   when: ansible_distribution == "Ubuntu"
 
-- name: Add Docker GPG apt Key
+- name: Add Docker GPG Apt Key
   apt_key:
     url: https://download.docker.com/linux/ubuntu/gpg
     state: present
-- name: Set http proxy for APT
+
+- name: Set Http Proxy For APT
   template:
     src: apt-proxy.j2
     dest: /etc/apt/apt.conf.d/proxy.conf
   when: proxy.server is defined and proxy.server != '' and proxy.server != None
 
-- name: Adding Docker Repository
+- name: Add Docker Repository
   apt_repository:
     repo: deb https://download.docker.com/linux/ubuntu {{ansible_distribution_release}} stable
     state: present
-- name: update apt cache
-  package:
-    update_cache: true
-- name: installing docker-ce
+
+- name: Update and Install Docker
   package:
     update_cache: true
     name: "{{item}}"
@@ -41,11 +40,13 @@
 
   ######## Set HTTP Proxy for Docker systemd service in vars.yaml ###########
 
-- name: Setting docker systemd proxy
+- name: Set Docker Systemd Proxy
   file:
     name: /etc/systemd/system/docker.service.d
     state: directory
-- template:
+
+- name: Jinja2 Template
+  template:
     src: docker-proxy.j2
     dest: /etc/systemd/system/docker.service.d/http-proxy.conf
   when: proxy.server is defined and proxy.server != '' and proxy.server != None
@@ -53,41 +54,44 @@
     - docker_restart
     - daemon_reload
   tags: docker_proxy
-- name: Enabling docker service to run at boot time
+
+- name: Enable Docker Service To Run At Boot Time
   service:
     name: docker
     enabled: true
     state: started
+
 - meta: flush_handlers
-- name: Checking if docker-compose is already installed
+- name: Check if Docker-compose Is Already Installed
   stat:
     path: /usr/local/bin/docker-compose
   register: docpos
 
-- name: Installing Docker Compose
+- name: Install Docker Compose
   shell:
     cmd: curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose && chmod +x  /usr/local/bin/docker-compose
 
   when: docpos.stat.exists == false
   tags: docker_compose
 
-- name: Installing Docker Module for Python
+- name: Install Docker Module for Python
   pip:
     name: "{{item}}"
     state: latest
+    extra_args: --upgrade
   loop: "{{pip_modules}}"
   notify:
     - docker_restart
 - meta: flush_handlers
 
   ################### Set your Docker hub credentials in default/main.yml #########################
-- name: login to dockerhub
+- name: Login To DockerHub
   docker_login:
     username: "{{docker.username}}"
     password: "{{docker.password}}"
   when: docker.username is defined and docker.username != '' and docker.username != None
 
-- name: Pulling default Docker image
+- name: Pull Default Docker Images
   docker_image:
     name: "{{ item }}"
     source: pull

@@ -1,5 +1,5 @@
 ---
-- name: Setting proper nameservers
+- name: Set Proper Nameserver
   blockinfile:
     block: |
       nameserver "{{nameserver.ns1}}"
@@ -7,7 +7,7 @@
     insertafter: EOF
     path: /etc/resolv.conf
 
-- name: Installing necessary packages.
+- name: Install Necessary Packages
   package:
     update_cache: true
     name: "{{item}}"
@@ -16,12 +16,16 @@
   when: ansible_distribution == "CentOS"
 
 - name: Set http proxy for
-  template:
-    src: apt-proxy.j2
-    dest: /etc/apt/apt.conf.d/proxy.conf
+  lineinfile:
+    dest: /etc/yum.conf
+    insertafter: EOF
+    line: |
+      proxy={{proxy.server}}
+      proxy_username={{proxy.username}}
+      proxy_password={{proxy.password}}
   when: proxy.server is defined and proxy.server != '' and proxy.server != None
 
-- name: Adding Docker Repository
+- name: Add Docker Repository
   yum_repository:
     name: Docker
     description: Docker CE Stable
@@ -31,57 +35,60 @@
     gpgkey: https://download.docker.com/linux/centos/gpg
     state: present
 
-- name: Updating yum and installing docker-ce
+- name: Update and Install Docker
   package:
     update_cache: true
     name: "{{item}}"
     state: present
-  loop: "{{docker_version.debian | default (default_docker_version)}}"
+  loop: "{{docker_version.redhat | default (default_docker_version)}}"
 
   ######## Set HTTP Proxy for Docker systemd service in vars.yaml ###########
 
-- name: Setting docker systemd proxy
+- name: Set Docker Systemd Proxy
   file:
     name: /etc/systemd/system/docker.service.d
     state: directory
+
 - template:
-    src: docker-proxy.j2
+    src: Jinja2 Template
     dest: /etc/systemd/system/docker.service.d/http-proxy.conf
   when: proxy.server is defined and proxy.server != '' and proxy.server != None
   notify:
     - docker_restart
     - daemon_reload
   tags: docker_proxy
-- name: Enabling docker service to run at boot time
+
+- name: Enable Docker Service To Run At Boot Time
   service:
     name: docker
     enabled: true
     state: started
 - meta: flush_handlers
-# - name: Checking if docker-compose is already installed
-#   stat:
-#     path: /usr/local/bin/docker-compose
-#   register: docpos
 
-- name: Installing Docker Compose
+- name: Check if Docker-compose Is Already Installed
+  stat:
+    path: /usr/local/bin/docker-compose
+  register: docpos
+
+- name: Install Docker Compose
   get_url:
     url: "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-Linux-x86_64"
     dest: /usr/local/bin/docker-compose
     mode: "0755"
-  #when: docpos.stat.exists == false
+  when: docpos.stat.exists == false
   tags: docker_compose
 
-- name: get python pip for centos 7
+- name: Get Python PIP For Centos 7
   get_url:
     url: "https://bootstrap.pypa.io/pip/2.7/get-pip.py"
     dest: /root/get-pip.py
   when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
 
-- name: install python pip
-  command: python get-pip.py
+- name: Install Python pip
+  command: python /root/get-pip.py
   when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
 
-- name: Installing Docker Module for Python
+- name: Install Docker Module for Python
   pip:
     name: "{{item}}"
     state: latest
@@ -92,14 +99,14 @@
 - meta: flush_handlers
 
   ################### Set your Docker hub credentials in default/main.yml #########################
-- name: login to dockerhub
+- name: Login To DockerHub
   docker_login:
     username: "{{docker.username}}"
     password: "{{docker.password}}"
   when: docker.username is defined and docker.username != '' and docker.username != None
   tags: docker_login
 
-- name: Pulling default Docker image
+- name: Pull Default Docker Images
   docker_image:
     name: "{{ item }}"
     source: pull
