@@ -68,9 +68,17 @@
     url: "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-Linux-x86_64"
     dest: /usr/local/bin/docker-compose
     mode: "0755"
-
   #when: docpos.stat.exists == false
   tags: docker_compose
+
+- name: get python pip for centos 7
+  get_url: "https://bootstrap.pypa.io/pip/2.7/get-pip.py"
+  dest: /root/get-pip.py
+  when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
+
+- name: install python pip
+  command: python get-pip.py
+  when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
 
 - name: Installing Docker Module for Python
   pip:

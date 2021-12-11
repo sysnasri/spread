@@ -7,7 +7,5 @@ docker_packages:
     - gnupg2
     - python3-pip
     - python3-setuptools
-    - python2-setuptools
-    - python2-pip
     - net-tools
     - iproute
