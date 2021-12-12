@@ -56,11 +56,12 @@ sometimes you may need to setup proxy for docker and underlying services such as
         port: ""  
 
 #### Default Docker images:
+
 To pull docker images that you need on the host you can name them in *./vars/main.yml* with following variable example: 
 
     images_name: 
        - nginx
-        - python
+       - python
 
 if these images are in private docker reposity you can see login inforamtion: 
 
