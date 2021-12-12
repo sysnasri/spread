@@ -18,7 +18,7 @@
         state: started
         enabled: yes
       tags:
-        - deployment
+        - install
 
     - name: Insure git is installed
       package:
